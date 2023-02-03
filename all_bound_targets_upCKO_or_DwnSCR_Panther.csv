@@ -1,17 +1,3 @@
-PANTHER Pathways,Mus musculus - REFLIST (21997),upload_1 (430),upload_1 (expected),upload_1 (over/under),upload_1 (fold Enrichment),upload_1 (raw P-value),upload_1 (FDR)
-Insulin/IGF pathway-mitogen activated protein kinase kinase/MAP kinase cascade (P00032),35,5,0.68,+,7.31,0.000958,0.0129
-TGF-beta signaling pathway (P00052),101,11,1.97,+,5.57,1.05E-05,0.000562
-T cell activation (P00053),90,9,1.76,+,5.12,0.000122,0.0028
-p53 pathway feedback loops 2 (P04398),50,5,0.98,+,5.12,0.00401,0.0403
-Ras Pathway (P04393),70,7,1.37,+,5.12,0.000688,0.0123
-B cell activation (P00010),71,7,1.39,+,5.04,0.000743,0.012
-FGF signaling pathway (P00021),122,11,2.38,+,4.61,5.26E-05,0.00141
-EGF receptor signaling pathway (P00018),136,12,2.66,+,4.51,2.95E-05,0.00119
-Parkinson disease (P00049),96,8,1.88,+,4.26,0.000886,0.013
-Gonadotropin-releasing hormone receptor pathway (P06664),235,19,4.59,+,4.14,5.18E-07,8.34E-05
-p53 pathway (P00059),88,7,1.72,+,4.07,0.00236,0.0271
-Integrin signalling pathway (P00034),190,14,3.71,+,3.77,4.24E-05,0.00137
-Apoptosis signaling pathway (P00006),124,9,2.42,+,3.71,0.00108,0.0134
-CCKR signaling map (P06959),163,11,3.19,+,3.45,0.000557,0.0112
-PDGF signaling pathway (P00047),143,9,2.8,+,3.22,0.00271,0.0291
-Unclassified (UNCLASSIFIED),19374,342,378.73,-,0.9,6.38E-07,5.13E-05
+version https://git-lfs.github.com/spec/v1
+oid sha256:f791b9358d7f92f04359939c60035dc64e183aea1400210b683e5445a8bbe802
+size 1295
