@@ -1,0 +1,20 @@
+PANTHER Pathways,Mus musculus - REFLIST (21997),upload_1 (495),upload_1 (expected),upload_1 (over/under),upload_1 (fold Enrichment),upload_1 (raw P-value),upload_1 (FDR)
+Cell cycle (P00013),24,4,0.54,+,7.41,0.00312,0.0279
+TGF-beta signaling pathway (P00052),101,15,2.27,+,6.6,4E-08,6.44E-06
+Insulin/IGF pathway-mitogen activated protein kinase kinase/MAP kinase cascade (P00032),35,5,0.79,+,6.35,0.00176,0.0218
+p53 pathway feedback loops 2 (P04398),50,6,1.13,+,5.33,0.00141,0.0227
+Oxidative stress response (P00046),56,6,1.26,+,4.76,0.00239,0.0241
+T cell activation (P00053),90,9,2.03,+,4.44,0.000338,0.00777
+Ras Pathway (P04393),70,7,1.58,+,4.44,0.00153,0.0224
+B cell activation (P00010),71,7,1.6,+,4.38,0.00165,0.0221
+Alzheimer disease-amyloid secretase pathway (P00003),66,6,1.49,+,4.04,0.00506,0.0429
+p53 pathway (P00059),88,8,1.98,+,4.04,0.00127,0.0227
+FGF signaling pathway (P00021),122,11,2.75,+,4.01,0.000177,0.00571
+Gonadotropin-releasing hormone receptor pathway (P06664),235,21,5.29,+,3.97,2.73E-07,1.46E-05
+EGF receptor signaling pathway (P00018),136,12,3.06,+,3.92,0.00011,0.00444
+Parkinson disease (P00049),96,8,2.16,+,3.7,0.00212,0.0244
+Integrin signalling pathway (P00034),190,14,4.28,+,3.27,0.000182,0.00487
+CCKR signaling map (P06959),163,12,3.67,+,3.27,0.00052,0.0105
+Apoptosis signaling pathway (P00006),124,9,2.79,+,3.23,0.00276,0.0262
+PDGF signaling pathway (P00047),143,10,3.22,+,3.11,0.00212,0.0228
+Unclassified (UNCLASSIFIED),19374,393,435.97,-,0.9,6.05E-08,4.87E-06

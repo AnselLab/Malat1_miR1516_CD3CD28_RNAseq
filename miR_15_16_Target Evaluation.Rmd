@@ -1,0 +1,147 @@
+---
+title: "miR-15/16 Target Gene Expression Analysis"
+output: html_notebook
+---
+
+load the appropriate libraries
+```{r}
+library(ggplot2)
+library(readxl)
+library(gplots)
+library(grid)
+library(RColorBrewer)
+library(VennDiagram)
+```
+
+read in the miR-15/16 target list 
+```{r}
+#this is just targetscan genes but must at least 1 read in WT and SCR
+miR_15_16_Targets = readRDS(file = "./TargetScan_1516_Targets_boundSCRnWT.RData")
+```
+
+
+read in the mRNA-seq processed data table
+```{r}
+Analysis_220224 = read_excel("Processed_Wheeler_Ansel.xlsx")
+```
+
+saving as excel file may have created a number format issue. Fixing here for plots below
+```{r}
+Analysis_220224$wt328_vs_scr328_Log2fc = as.numeric(Analysis_220224$wt328_vs_scr328_Log2fc)
+```
+
+total miR-15-16 targets 479 genes with a total of 603 target sites
+```{r}
+summary(Analysis_220224$fl328_vs_cko328_Log2fc[Analysis_220224$Gene %in% miR_15_16_Targets$UTR_gene]<0)
+#294 15/16 targets below 0 in FLvsCKO log2 fc
+summary(Analysis_220224$wt328_vs_scr328_Log2fc[Analysis_220224$Gene %in% miR_15_16_Targets$UTR_gene]>0)
+#298 15/16 targets above 0 in WTvsSCR log2 fc
+summary(Analysis_220224$wt328_vs_scr328_Log2fc[Analysis_220224$Gene %in% miR_15_16_Targets$UTR_gene & Analysis_220224$fl328_vs_cko328_Log2fc<0]>0)
+#160 of targets up in 15/16 cKO also down in scr
+
+```
+generate venn diagram for figure 2g
+```{r}
+pdf(file = "./VennDiag_1516Targets_UPnDown.pdf", height = 6, width = 8)
+grid.newpage()
+draw.triple.venn(area1 = 479, area2 = 294, area3 = 298, n12 = 294, n23 = 160, n13 = 298, n123 = 160, category = c("miR-15/16 Targets","Targets Up in miR-15/16 cKOs", "Targets Down in Malat1^scr/scr"), fill = c("Grey","Red","Blue"))
+dev.off()
+```
+
+save the target lists
+```{r}
+Targets_UpCKO = Analysis_220224$Gene[Analysis_220224$Gene %in% miR_15_16_Targets$UTR_gene & Analysis_220224$fl328_vs_cko328_Log2fc<0]
+Targets_DwnSCR = Analysis_220224$Gene[Analysis_220224$Gene %in% miR_15_16_Targets$UTR_gene & Analysis_220224$wt328_vs_scr328_Log2fc>0]
+Targets_UpCKO_DwnSCR = Analysis_220224$Gene[Analysis_220224$Gene %in% miR_15_16_Targets$UTR & Analysis_220224$wt328_vs_scr328_Log2fc>0 & Analysis_220224$fl328_vs_cko328_Log2fc<0]
+Targets_UpCKO_or_DwnSCR = Analysis_220224$Gene[Analysis_220224$Gene %in% miR_15_16_Targets$UTR & (Analysis_220224$wt328_vs_scr328_Log2fc>0 | Analysis_220224$fl328_vs_cko328_Log2fc<0)]
+
+saveRDS(Targets_UpCKO, file = "./Targets_UpCKO.rds")
+saveRDS(Targets_DwnSCR, file = "./Targets_DwnSCR.rds")
+saveRDS(Targets_UpCKO_DwnSCR, file = "./Targets_UpCKO_DwnSCR.rds")
+saveRDS(miR_15_16_Targets$Gene , file = "./Targets.rds")
+
+write.csv(Targets_UpCKO, file = "./Targets_UpCKO.csv")
+write.csv(Targets_DwnSCR, file = "./Targets_DwnSCR.csv")
+write.csv(Targets_UpCKO_DwnSCR, file = "./Targets_UpCKO_DwnSCR.csv")
+write.csv(Targets_UpCKO_or_DwnSCR, file = "./Targets_UpCKO_or_DwnSCR.csv")
+write.csv(miR_15_16_Targets$UTR_gene, file = "./Targets.csv")
+
+
+
+```
+
+subset 3 & 28 data to just miR-15/16 targets
+```{r}
+Analysis_Targets_Only = Analysis_220224[(Analysis_220224$Gene %in% miR_15_16_Targets$UTR_gene),]
+```
+add whether gene is target column
+```{r}
+Analysis_220224$miR15_16_Target = Analysis_220224$Gene %in% miR_15_16_Targets$UTR_gene
+```
+make a set of All-non miR-15/16 Targets
+```{r}
+Analysis_NonTargets_Only = Analysis_220224[!(Analysis_220224$Gene %in% miR_15_16_Targets$UTR_gene),]
+```
+
+
+
+plot target cdf for cKO
+```{r}
+pdf(file = "./CDF_1516Targets_fl328vscko328.pdf", height = 6, width = 8)
+ggplot(Analysis_220224, aes(fl328_vs_cko328_Log2fc, color = miR15_16_Target)) + stat_ecdf(geom = "step") + xlim(c(-1,1)) + ggtitle("miR-15/16 Targets are Up in miR-15/16 Knock Outs") + ylab("Cummulative Density") + xlab("Log2FC miR-15/16^fl/fl vs miR-15/16 KO")
+dev.off()
+```
+
+
+
+plot target cdf for scr
+```{r}
+pdf(file = "./CDF_1516Targets_wt328vsscr328.pdf", height = 6, width = 8)
+ggplot(Analysis_220224, aes(wt328_vs_scr328_Log2fc, color = miR15_16_Target)) + stat_ecdf(geom = "step") + xlim(c(-1,1))+ ggtitle("miR-15/16 Targets are Down in Malat1^scr") + ylab("Cummulative Density") + xlab("Log2FC WT vs Malat1^Scr")
+dev.off()
+
+```
+
+do some stats to test the eye test from above
+first miR-15/16 cKO
+```{r}
+ks.test(Analysis_Targets_Only$fl328_vs_cko328_Log2fc, Analysis_NonTargets_Only$fl328_vs_cko328_Log2fc)
+```
+
+do some stats to test the eye test from above
+next Malat1 Scr
+```{r}
+ks.test(Analysis_Targets_Only$wt328_vs_scr328_Log2fc, Analysis_NonTargets_Only$wt328_vs_scr328_Log2fc)
+```
+
+read in the panther results
+```{r}
+UpCKO_DwnSCR_Panther = read.csv(file = "./all_bound_targets_upCKO_or_DwnSCR_Panther.csv")
+All_Panther = read.csv(file = "./all_bound_targets_Panther.csv")
+
+UpCKO_DwnSCR_Panther$group = "Up_CKO_Dwn_SCR"
+All_Panther$group = "All"
+
+colnames(UpCKO_DwnSCR_Panther)[6] = "Fold Enrichment"
+colnames(All_Panther)[6] = "Fold Enrichment"
+
+colnames(UpCKO_DwnSCR_Panther)[8] = "FDR"
+colnames(All_Panther)[8] = "FDR"
+
+colnames(UpCKO_DwnSCR_Panther)[3] = "upload1"
+colnames(All_Panther)[3] = "upload1"
+```
+
+merge all results
+```{r}
+All_panther = rbind(UpCKO_DwnSCR_Panther,All_Panther)
+```
+
+make plot
+```{r}
+pdf(file = "./Panther_Analysis_Plotted.pdf", height = 8, width = 10)
+ggplot(All_panther, aes(x = group, y = PANTHER.Pathways, color = FDR, size = `Fold Enrichment`)) + geom_point(alpha= 0.8) +  theme_classic() +
+  scale_color_gradient(low = "red2",  high = "mediumblue", space = "Lab")
+dev.off()
+```
+

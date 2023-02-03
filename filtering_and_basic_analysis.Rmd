@@ -1,0 +1,140 @@
+---
+title: "RNA seq Results Reprocessing"
+output: html_notebook
+---
+
+load necessary packages
+```{r}
+library(ggfortify)
+library(VennDiagram)
+library(ggplot2)
+library(umap)
+library(writexl)
+```
+
+
+load all genes data set
+```{r}
+All_genes = read.csv(file = "All_genes.1056_Ansel.csv")
+```
+
+remove genes with <100 avg in norm counts
+```{r}
+m = dim(All_genes)
+for(i in 1:m[1]){
+  All_genes$Robust_Expression[i] = (mean(as.matrix(All_genes[i,30:79]))>100)
+  
+}
+
+Robust_genes = All_genes[All_genes$Robust_Expression,]
+```
+
+Add Pairwise Comparisons for the following relevant comparisons using norm values
+columns of samples
+wt 3 74:79
+wt 3 28 68:73
+scr 3 61:67
+scr 3 28 54:60
+
+fl 3 48:53
+fl 3 28 42:47
+cko 3 36:41
+cko 3 28 30:35
+-----------------
+WT 3 vs SCR 3
+WT 3 vs WT 3 28
+WT 3 28 vs scr 3 28
+scr 3 vs scr 3 28
+
+fl 3 vs cko 3
+fl 3 vs fl 3 28
+fl 3 28 vs cko 3 28
+cko 3 vs cko 3 28
+```{r}
+Analysis_220224 = Robust_genes
+n = dim(Analysis_220224)
+
+for(i in 1:n[1]){
+  Analysis_220224$wt3_vs_scr3_fc[i] = mean(as.matrix(Analysis_220224[i,74:79]))/mean(as.matrix(Analysis_220224[i,61:67]))
+  Analysis_220224$wt3_vs_scr3_RawP[i] = t.test(as.matrix(Robust_genes[i,74:79]),as.matrix(Robust_genes[i,61:67]))[3]
+  
+  Analysis_220224$wt3_vs_wt328_fc[i] = mean(as.matrix(Analysis_220224[i,74:79]))/mean(as.matrix(Analysis_220224[i,68:73]))
+  Analysis_220224$wt3_vs_wt328_RawP[i] = t.test(as.matrix(Robust_genes[i,74:79]),as.matrix(Robust_genes[i,68:73]))[3]
+  
+  Analysis_220224$wt328_vs_scr328_fc[i] = mean(as.matrix(Analysis_220224[i,68:73]))/mean(as.matrix(Analysis_220224[i,54:60]))
+  Analysis_220224$wt328_vs_scr328_RawP[i] = t.test(as.matrix(Robust_genes[i,68:73]),as.matrix(Robust_genes[i,54:60]))[3]
+  
+  Analysis_220224$scr3_vs_scr328_fc[i] = mean(as.matrix(Analysis_220224[i,61:67]))/mean(as.matrix(Analysis_220224[i,54:60]))
+  Analysis_220224$scr3_vs_scr328_RawP[i] = t.test(as.matrix(Robust_genes[i,61:67]),as.matrix(Robust_genes[i,54:60]))[3]
+  
+  Analysis_220224$fl3_vs_cko3_fc[i] = mean(as.matrix(Analysis_220224[i,48:53]))/mean(as.matrix(Analysis_220224[i,36:41]))
+  Analysis_220224$fl3_vs_cko3_RawP[i] = t.test(as.matrix(Robust_genes[i,48:53]),as.matrix(Robust_genes[i,36:41]))[3]
+  
+  Analysis_220224$fl3_vs_fl328_fc[i] = mean(as.matrix(Analysis_220224[i,48:53]))/mean(as.matrix(Analysis_220224[i,42:47]))
+  Analysis_220224$fl3_vs_fl328_RawP[i] = t.test(as.matrix(Robust_genes[i,48:53]),as.matrix(Robust_genes[i,42:47]))[3]
+  
+  Analysis_220224$fl328_vs_cko328_fc[i] = mean(as.matrix(Analysis_220224[i,42:47]))/mean(as.matrix(Analysis_220224[i,30:35]))
+  Analysis_220224$fl328_vs_cko328_RawP[i] = t.test(as.matrix(Robust_genes[i,42:47]),as.matrix(Robust_genes[i,30:35]))[3]
+  
+  Analysis_220224$cko3_vs_cko328_fc[i] = mean(as.matrix(Analysis_220224[i,36:41]))/mean(as.matrix(Analysis_220224[i,30:35]))
+  Analysis_220224$cko3_vs_cko328_RawP[i] = t.test(as.matrix(Robust_genes[i,36:41]),as.matrix(Robust_genes[i,30:35]))[3]
+
+  
+  
+}
+
+
+
+```
+
+remove na genes
+```{r}
+Analysis_220224 = Analysis_220224[!(is.na(Analysis_220224$Gene)),]
+```
+
+
+add in log2fc for above comparisons
+```{r}
+Analysis_220224$wt3_vs_scr3_Log2fc = log2(Analysis_220224$wt3_vs_scr3_fc)
+Analysis_220224$wt3_vs_wt328_Log2fc = log2(Analysis_220224$wt3_vs_wt328_fc)
+Analysis_220224$wt328_vs_scr328_Log2fc = log2(Analysis_220224$wt328_vs_scr328_fc)
+Analysis_220224$scr3_vs_scr328_Log2fc = log2(Analysis_220224$scr3_vs_scr328_fc)
+
+Analysis_220224$fl3_vs_cko3_Log2fc = log2(Analysis_220224$fl3_vs_cko3_fc)
+Analysis_220224$fl3_vs_fl328_Log2fc = log2(Analysis_220224$fl3_vs_fl328_fc)
+Analysis_220224$fl328_vs_cko328_Log2fc = log2(Analysis_220224$fl328_vs_cko328_fc)
+Analysis_220224$cko3_vs_cko328_Log2fc = log2(Analysis_220224$cko3_vs_cko328_fc)
+```
+
+Adjust P-Values to FDR 
+```{r}
+Analysis_220224$wt3_vs_scr3_FDR = p.adjust(as.numeric(Analysis_220224$wt3_vs_scr3_RawP), method = "fdr")
+Analysis_220224$wt3_vs_wt328_FDR = p.adjust(Analysis_220224$wt3_vs_wt328_RawP, method = "fdr")
+Analysis_220224$wt328_vs_scr328_FDR = p.adjust(Analysis_220224$wt328_vs_scr328_RawP, method = "fdr")
+Analysis_220224$scr3_vs_scr328_FDR = p.adjust(Analysis_220224$scr3_vs_scr328_RawP, method = "fdr")
+
+Analysis_220224$fl3_vs_cko3_FDR = p.adjust(Analysis_220224$fl3_vs_cko3_RawP, method = "fdr")
+Analysis_220224$fl3_vs_fl328_FDR = p.adjust(Analysis_220224$fl3_vs_fl328_RawP, method = "fdr")
+Analysis_220224$fl328_vs_cko328_FDR = p.adjust(Analysis_220224$fl328_vs_cko328_RawP, method = "fdr")
+Analysis_220224$cko3_vs_cko328_FDR = p.adjust(Analysis_220224$cko3_vs_cko328_RawP, method = "fdr")
+```
+
+transform P values
+```{r}
+Analysis_220224$wt3_vs_scr3_NegLogP = -log10(as.numeric(Analysis_220224$wt3_vs_scr3_RawP))
+Analysis_220224$wt3_vs_wt328_NegLogP = -log10(as.numeric(Analysis_220224$wt3_vs_wt328_RawP))
+Analysis_220224$wt328_vs_scr328_NegLogP = -log10(as.numeric(Analysis_220224$wt328_vs_scr328_RawP))
+Analysis_220224$scr3_vs_scr328_NegLogP = -log10(as.numeric(Analysis_220224$scr3_vs_scr328_RawP))
+
+Analysis_220224$fl3_vs_cko3_NegLogP = -log10(as.numeric(Analysis_220224$fl3_vs_cko3_RawP))
+Analysis_220224$fl3_vs_fl328_NegLogP = -log10(as.numeric(Analysis_220224$fl3_vs_fl328_RawP))
+Analysis_220224$fl328_vs_cko328_NegLogP = -log10(as.numeric(Analysis_220224$fl328_vs_cko328_RawP))
+Analysis_220224$cko3_vs_cko328_NegLogP = -log10(as.numeric(Analysis_220224$cko3_vs_cko328_RawP))
+```
+
+save the processed file
+```{r}
+writexl::write_xlsx(Analysis_220224, path = "Processed_Wheeler_Ansel.xlsx")
+```
+
+

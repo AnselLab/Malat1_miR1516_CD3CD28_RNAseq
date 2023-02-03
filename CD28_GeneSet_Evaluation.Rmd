@@ -1,0 +1,157 @@
+---
+title: "Evaluation of Gene Expression Responsive to CD28 Signaling"
+output: html_notebook
+---
+
+load the necessary packages
+```{r}
+library(gplots)
+library(ggplot2)
+library(readxl)
+library(RColorBrewer)
+```
+
+load gene expression data from Martínez-Llordella et al. 2013
+```{r}
+CD28Reference = read.delim(file = "CD3vsCD3CD28_reference.tsv", sep = "\t")
+```
+
+
+read in the mRNA-seq processed data table
+```{r}
+Analysis_220224 = read_excel("Processed_Wheeler_Ansel.xlsx")
+```
+saving as excel file may have created a number format issue. Fixing here for plots below
+```{r}
+Analysis_220224$wt328_vs_scr328_Log2fc = as.numeric(Analysis_220224$wt328_vs_scr328_Log2fc)
+Analysis_220224$wt3_vs_wt328_Log2fc = as.numeric(Analysis_220224$wt3_vs_wt328_Log2fc)
+```
+
+
+slice for just significantly up in CD28 combo
+```{r}
+CD28_set =CD28Reference[(CD28Reference$logFC > 1.5 & CD28Reference$adj.P.Val < 0.001),]
+```
+
+```{r}
+CD28_Genes = CD28_set$Gene.symbol[!(CD28_set$Gene.symbol == "") | !is.na(CD28_set$Gene.symbol)]
+```
+save the set
+```{r}
+write.table(CD28_Genes, file = "CD28_Genes.grp", sep = "\t", row.names = F, quote = F)
+```
+
+add column to main spread sheet regarding CD28 Responsive
+```{r}
+Analysis_220224$CD28_Responsive = Analysis_220224$Gene %in% CD28_Genes
+```
+
+Make a data frame of responsive genes
+```{r}
+Analysis_CD28_resp = Analysis_220224[Analysis_220224$CD28_Responsive,]
+```
+
+make a data frame of non-responsive genes
+```{r}
+Analysis_CD28_noResp = Analysis_220224[!Analysis_220224$CD28_Responsive,]
+```
+
+plot CD28 Responsive cdf for cKO with CD28 stim
+```{r}
+pdf("./cko_328_cdf.pdf", height = 5, width = 8)
+ggplot(Analysis_220224, aes(fl328_vs_cko328_Log2fc, color = CD28_Responsive)) + stat_ecdf(geom = "step") + xlim(c(-1,1))
+dev.off()
+```
+
+check the stats
+```{r}
+ks.test(Analysis_CD28_resp$fl328_vs_cko328_Log2fc, Analysis_CD28_noResp$fl328_vs_cko328_Log2fc)
+```
+
+plot CD28 Responsive cdf for cKO with only cd3 stim
+```{r}
+pdf("./cko_3_cdf.pdf", height = 5, width = 8)
+ggplot(Analysis_220224, aes(fl3_vs_cko3_Log2fc, color = CD28_Responsive)) + stat_ecdf(geom = "step") + xlim(c(-1,1))
+dev.off()
+```
+
+check the stats
+```{r}
+ks.test(Analysis_CD28_resp$fl3_vs_cko3_Log2fc, Analysis_CD28_noResp$fl328_vs_cko328_Log2fc)
+```
+
+
+
+plot CD28 Responsive cdf for scr with cd28 stim
+```{r}
+pdf("./scr_328_cdf.pdf", height = 5, width = 8)
+ggplot(Analysis_220224, aes(wt328_vs_scr328_Log2fc, color = CD28_Responsive)) + stat_ecdf(geom = "step") + xlim(c(-1,1))
+dev.off()
+```
+check these stats
+```{r}
+ks.test(Analysis_CD28_resp$wt328_vs_scr328_Log2fc, Analysis_CD28_noResp$wt328_vs_scr328_Log2fc)
+```
+
+
+
+plot CD28 Responsive cdf for scr with only cd3 stim
+```{r}
+pdf("./scr_3_cdf.pdf", height = 5, width = 8)
+ggplot(Analysis_220224, aes(wt3_vs_scr3_Log2fc, color = CD28_Responsive)) + stat_ecdf(geom = "step") + xlim(c(-1,1))
+dev.off()
+```
+check these stats
+```{r}
+ks.test(Analysis_CD28_resp$wt3_vs_scr3_Log2fc, Analysis_CD28_noResp$wt328_vs_scr328_Log2fc)
+```
+
+
+
+
+plot CD28 Responsive cdf for CD28 Stim WT, as a control to see if this gene set is responsive
+```{r}
+pdf("./wt_3_wt_328_cdf.pdf", height = 5, width = 8)
+ggplot(Analysis_220224, aes(wt3_vs_wt328_Log2fc, color = CD28_Responsive)) + stat_ecdf(geom = "step") + xlim(c(-1,1))
+dev.off()
+```
+
+plot CD28 Responsive cdf for CD28 Stim fl
+```{r}
+pdf("./fl_3_fl_328_cdf.pdf", height = 5, width = 8)
+ggplot(Analysis_220224, aes(fl3_vs_fl328_Log2fc, color = CD28_Responsive)) + stat_ecdf(geom = "step") + xlim(c(-1,1))
+dev.off()
+```
+
+plot CD28 Responsive cdf for CD28 Stim cko
+```{r}
+pdf("./cko_3_cko_328_cdf.pdf", height = 5, width = 8)
+ggplot(Analysis_220224, aes(cko3_vs_cko328_Log2fc, color = CD28_Responsive)) + stat_ecdf(geom = "step") + xlim(c(-1,1))
+dev.off()
+```
+
+plot CD28 Responsive cdf for CD28 Stim scr
+```{r}
+pdf("./scr_3_scr_328_cdf.pdf", height = 5, width = 8)
+ggplot(Analysis_220224, aes(scr3_vs_scr328_Log2fc, color = CD28_Responsive)) + stat_ecdf(geom = "step") + xlim(c(-1,1))
+dev.off()
+```
+
+lets do some heat maps - first cko CD28 gene sig
+```{r}
+To_Heatmap = Analysis_220224[(Analysis_220224$Gene %in% CD28_Genes), 30:53]
+rownames(To_Heatmap) =Analysis_220224$Gene[(Analysis_220224$Gene %in% CD28_Genes)]
+To_Heatmap = as.matrix(To_Heatmap)
+pdf(file = "./cko_all_heatmap.pdf", width = 19, height = 10)
+heatmap.2(To_Heatmap, scale = "row", trace = "none", margins = c(10,10), col = brewer.pal(7, "PRGn"))
+dev.off()
+```
+now lets do scr Cd28 sig
+```{r}
+To_Heatmap = Analysis_220224[(Analysis_220224$Gene %in% CD28_Genes), 54:79]
+rownames(To_Heatmap) =Analysis_220224$Gene[(Analysis_220224$Gene %in% CD28_Genes)]
+To_Heatmap = as.matrix(To_Heatmap)
+pdf(file = "./scr_all_heatmap.pdf",width = 19, height =10)
+heatmap.2(To_Heatmap, scale = "row", trace = "none", margins = c(10,10), col = brewer.pal(7, "PRGn"), hclustfun = function(x) hclust(x, method = "average"))
+dev.off()
+```
